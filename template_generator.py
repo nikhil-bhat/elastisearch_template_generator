@@ -27,14 +27,17 @@ template = OrderedDict()
 template["template"] = template_name
 template["settings"] = { "index.refresh_interval": refresh_interval,"number_of_replicas": number_replicas}
 template["mappings"] = {}
-template["mappings"][_type] = {}
+template["mappings"][_type] = OrderedDict()
 template["mappings"][_type]["_all"] = {}
 template["mappings"][_type]["_all"]["enabled"] = to_enable_all
 template["mappings"][_type]["_source"] = {}
 template["mappings"][_type]["_source"]["enabled"] = to_enable_source
-template["mappings"][_type]["properties"] = {"@version": {"index": "not_analyzed","doc_values" : True,"type": "integer" }}
+template["mappings"][_type]["properties"] = {}
 for strs in config.not_analyzed_strings:
     template["mappings"][_type]["properties"][strs] = {"index" : "not_analyzed","doc_values" : True,"type": "string"}
+
+for strs in config.not_indexed_strings:
+    template["mappings"][_type]["properties"][strs] = {"index" : "no","type": "string"}
 
 for times in config.timefields:
     template["mappings"][_type]["properties"][times] = {
@@ -44,9 +47,13 @@ for times in config.timefields:
                                                        }
 
 for dbls in config.double_types:
-    template["mappings"][_type]["properties"][dbls] = { "type" : "double",
-                                                       "doc_values" : True,
-    }
+    template["mappings"][_type]["properties"][dbls] = { "type" : "double","doc_values" : True,"index": "not_analyzed"}
+for ints in config.integer_types:
+    template["mappings"][_type]["properties"][ints] = { "type" : "integer","doc_values" : True,"index": "not_analyzed"}
+for longs in config.long_types:
+    template["mappings"][_type]["properties"][longs] = { "type" : "long","doc_values" : True,"index": "not_analyzed"}
+for ips in config.ip_fields:
+    template["mappings"][_type]["properties"][ips] = { "type" : "ip","doc_values" : True,"index": "not_analyzed"}
 
 with open("templates.json","w") as json_file:
     json_file.write(json.dumps(template,indent=4))
